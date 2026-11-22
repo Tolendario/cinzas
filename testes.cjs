@@ -18,10 +18,11 @@ globalThis.T = {
  get stages(){return stages},get creatures(){return creatures},get pillars(){return pillars},
  get classes(){return classes},get selectedClass(){return selectedClass},selectClass,
  get weapons(){return weapons},get selectedWeapons(){return selectedWeapons},selectWeapon,equippedWeapon,
- get bag(){return bag},get equipment(){return equipment},get gearBonus(){return gearBonus},get gearTimers(){return gearTimers},get chest(){return chest},get chestClaimed(){return chestClaimed},get modalHandler(){return modalHandler},get pickups(){return pickups},
+ get equipment(){return equipment},get gearBonus(){return gearBonus},get gearTimers(){return gearTimers},get chest(){return chest},get chestClaimed(){return chestClaimed},get modalHandler(){return modalHandler},get pickups(){return pickups},
  get talentPaths(){return talentPaths},get companions(){return companions},get traps(){return traps},get talentTimers(){return talentTimers},
  get encounter(){return encounter},get crystal(){return crystal},get objectivesWon(){return objectivesWon},get perfectRooms(){return perfectRooms},
- get kills(){return kills},
+ get kills(){return kills},campaignFor,completedLevels,commitBossCheckpoint,backToMenu,
+ resetCampaigns(){for(const id of Object.keys(classes))save.campaigns[id]={clearedRealms:0,wins:0,checkpoint:null};persist()},
  get roomEvent(){return roomEvent},get eventBonus(){return eventBonus},get eventStats(){return eventStats},
  prepareRoomEvent,updateRoomEvent,eventOffers,openRoomEvent,tryRoomEvent,enterSecretRoom,leaveSecretRoom,eventInteraction,
  nextRoom,openRoute,clearRunGear,realms,prepareEncounter,damageCrystal,completeEncounter,grantEncounterReward,spawnWave,enemyShot,
@@ -29,7 +30,7 @@ globalThis.T = {
  offerBlessing,applyWeaponEffect,castMultiplier,
  resetMastery(){for(const id of Object.keys(classes)){save.mastery[id]={level:1,xp:0,points:1,learned:[]};save.specializations[id]=null}persist();renderMasteryHud()},
  masterySetup(classId,path,ids){save.mastery[classId]={level:6,xp:0,points:6-ids.length,learned:[...ids]};save.specializations[classId]=path;persist();renderMasteryHud()},
- rollGear,addGear,openInventory,closeInventory,equipGear,unequipGear,openChest,ensureChest,dropGear,killEnemy,
+ rollGear,addGear,openInventory,closeInventory,openChest,ensureChest,dropGear,killEnemy,
  advance(seconds){for(let t=0;t<seconds;t+=.016)update(.016);render()},
  startRun,attack,dash,special,cast,takeDamage,spawnEnemy,hitEnemy,finishRun,pauseGame,
  showHelp,render, getAim,
@@ -48,7 +49,7 @@ globalThis.T = {
 `;
 const testHtml = html.replace(script, script.replaceAll('requestAnimationFrame(frame)', '/* RAF disabled only in fixture */').replace(/\}\)\(\);\s*$/, testApi + '})();'));
 let passed=0;
-async function check(name,action){if(process.argv.includes('--celular')&&!name.includes('utilizáveis no celular'))return;await action();console.log('OK',name);passed++}
+async function check(name,action){if(process.argv.includes('--celular')&&!name.includes('celular'))return;await action();console.log('OK',name);passed++}
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.PLAYWRIGHT_BROWSER_CHANNEL?{channel:process.env.PLAYWRIGHT_BROWSER_CHANNEL}:process.platform==='win32'?{channel:'msedge'}:{})});
  try{
@@ -67,18 +68,16 @@ async function check(name,action){if(process.argv.includes('--celular')&&!name.i
  await context.route('https://cinzas.test/**',route=>route.fulfill({contentType:'text/html',body:testHtml}));
  await page.goto('https://cinzas.test');
  async function start(room=0,classId='warrior',weaponId=null){await page.evaluate(({room,classId,weaponId})=>T.startRun(room,classId,weaponId),{room,classId,weaponId})}
- async function choose(index=0){await page.evaluate(()=>T.teleport(T.chest.x,T.chest.y));await page.keyboard.press('e');await page.locator(`[data-choice="${index}"]`).click();assert.equal(await page.evaluate(()=>T.state),'inventory');await page.keyboard.press('i')}
+ async function choose(index=0){await page.evaluate(()=>T.teleport(T.chest.x,T.chest.y));await page.keyboard.press('e');await page.locator(`[data-choice="${index}"]`).click();assert.equal(await page.evaluate(()=>T.state),'playing')}
  async function bossReward(room=5){await start(room);await page.evaluate(()=>T.completeCurrentEncounter());if(await page.evaluate(()=>T.state==='blessing'))await page.keyboard.press('1')}
  await check('11 temáticas mantêm cinco níveis de duas ondas seguidos de um chefe próprio',async()=>{
   const result=await page.evaluate(()=>T.realms.map((r,i)=>{const block=T.stages.slice(i*6,i*6+6);return{theme:block.map(s=>s.theme||'underworld'),bosses:block.map(s=>!!s.boss),indices:block.map(s=>s.roomInRealm),boss:block[5].boss,name:block[5].bossName}}));
   assert.equal(result.length,11);assert.equal(new Set(result.map(r=>r.boss)).size,11);assert.equal(new Set(result.map(r=>r.name)).size,11);
   for(const r of result){assert.equal(new Set(r.theme).size,1);assert.deepEqual(r.bosses,[false,false,false,false,false,true]);assert.deepEqual(r.indices,[0,1,2,3,4,5])}
  });
- await check('nível começa vazio, sem baú, e gera a primeira onda automaticamente',async()=>{
-  await start();const info=await page.evaluate(()=>{T.player.invuln=100;T.advance(1.4);return{bag:T.bag.length,equipped:Object.values(T.equipment).filter(Boolean).length,wave:T.wave,enemies:T.enemies.length,chest:T.chest}});
-  assert.equal(info.bag,0);assert.equal(info.equipped,0);assert.equal(info.wave,1);assert.ok(info.enemies>0);assert.equal(info.chest,null);
- });
- await check('limpar as duas ondas de qualquer nível normal não gera baú',async()=>{
+ await check('nível inicia com três espaços vazios e combate automático, sem mochila',async()=>{
+  await start();const r=await page.evaluate(()=>{T.player.invuln=100;T.advance(1.4);return{count:Object.values(T.equipment).filter(Boolean).length,wave:T.wave,enemies:T.enemies.length,chest:T.chest}});assert.equal(r.count,0);assert.equal(r.wave,1);assert.ok(r.enemies>0);assert.equal(r.chest,null);assert.equal(await page.locator('#inventoryCount').count(),0);
+ }); await check('limpar as duas ondas de qualquer nível normal não gera baú',async()=>{
   for(let realm=0;realm<11;realm++)for(let level=0;level<5;level++){
    await start(realm*6+level);await page.evaluate(()=>T.completeCurrentEncounter());
    assert.equal(await page.evaluate(()=>T.state),'blessing');assert.equal(await page.evaluate(()=>T.wave),2);assert.equal(await page.evaluate(()=>T.chest),null);
@@ -102,53 +101,32 @@ async function check(name,action){if(process.argv.includes('--celular')&&!name.i
   await page.keyboard.press('h');await page.keyboard.press('i');await page.keyboard.press('Escape');await page.evaluate(()=>T.advance(15));
   assert.equal(await page.evaluate(()=>T.state),'chestChoice');assert.deepEqual(await page.evaluate(()=>({wave:T.wave,hp:T.player.hp,offers:T.chest.offers.map(i=>i.uid)})),before);
  });
- await check('escolha recebe só um item, remove o baú e bloqueia duplicação por callback antigo',async()=>{
-  const before=await page.evaluate(()=>{window.staleChestChoice=T.modalHandler;return{uid:T.chest.offers[1].uid,count:T.bag.length}});
-  await page.keyboard.press('2');assert.equal(await page.evaluate(()=>T.state),'inventory');
-  assert.deepEqual(await page.evaluate(uid=>({received:T.bag.some(i=>i.uid===uid),count:T.bag.length,chest:T.chest,claimed:T.chestClaimed}),before.uid),{received:true,count:before.count+1,chest:null,claimed:true});
-  await page.keyboard.press('i');const result=await page.evaluate(()=>{window.staleChestChoice(0);for(let i=0;i<10;i++)T.ensureChest();T.advance(4);T.render();return{chest:T.chest,open:T.openChest(),count:T.bag.length,wave:T.wave}});
-  assert.equal(result.chest,null);assert.equal(result.open,false);assert.equal(result.count,before.count+1);assert.equal(result.wave,1);
- });
- await check('duas ondas normais sem terceiro grupo ou baú no portal',async()=>{
+ await check('baú equipa só a escolha, desaparece e bloqueia duplicação',async()=>{
+  const uid=await page.evaluate(()=>{window.staleChestChoice=T.modalHandler;return T.chest.offers[1].uid});await page.keyboard.press('2');assert.equal(await page.evaluate(()=>T.state),'playing');
+  assert.equal(await page.evaluate(()=>T.equipment.ring.uid),uid);assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),1);
+  const r=await page.evaluate(()=>{window.staleChestChoice(0);for(let i=0;i<10;i++)T.ensureChest();T.advance(4);T.render();return{chest:T.chest,open:T.openChest(),count:Object.values(T.equipment).filter(Boolean).length,wave:T.wave}});assert.deepEqual(r,{chest:null,open:false,count:1,wave:1});
+ }); await check('duas ondas normais sem terceiro grupo ou baú no portal',async()=>{
   await start();await page.evaluate(()=>{T.player.invuln=100;T.advance(1.4)});assert.equal(await page.evaluate(()=>T.wave),1);
   await page.evaluate(()=>{T.clearEnemies();T.advance(2.6)});assert.equal(await page.evaluate(()=>T.wave),2);assert.equal(await page.evaluate(()=>T.state),'playing');
   await page.evaluate(()=>{T.clearEnemies();T.advance(1.3)});assert.equal(await page.evaluate(()=>T.state),'blessing');await page.keyboard.press('1');
   assert.equal(await page.evaluate(()=>T.portal),true);assert.equal(await page.evaluate(()=>T.chest),null);
  });
- await check('troca devolve a peça anterior para a mochila, sem venda ou ganho de óbolos',async()=>{
-  await start();const result=await page.evaluate(()=>{T.isolate();const a=T.rollGear('enemy',0,'hunter'),b=T.rollGear('enemy',2,'precision');T.addGear(a,false);T.addGear(b,false);T.openInventory();const gold=T.gold;T.equipGear(a.uid);const count=T.bag.length;T.equipGear(b.uid);return{equipped:T.equipment.ring.uid===b.uid,returned:T.bag.some(i=>i.uid===a.uid),count:T.bag.length===count,gold:T.gold===gold}});
-  assert.deepEqual(result,{equipped:true,returned:true,count:true,gold:true});assert.equal(await page.locator('[data-gear-sell]').count(),0);assert.doesNotMatch(await page.locator('.gear-actions').innerText(),/VENDER/);
-  await page.screenshot({path:path.join(__dirname,'previa-inventario.png')});await page.keyboard.press('i');
- });
- await check('trocar ou remover armadura não cura o jogador',async()=>{
-  const r=await page.evaluate(()=>{T.startRun();T.isolate();const a=T.rollGear('enemy',0,'obsidian');T.addGear(a,false);T.player.hp=50;T.openInventory();T.equipGear(a.uid);const equipped=T.player.hp;T.unequipGear('armor');return{equipped,removed:T.player.hp}});assert.deepEqual(r,{equipped:50,removed:50});await page.keyboard.press('i');
- });
- await check('portal e próxima fase conservam mochila, equipamentos, bônus e vida máxima',async()=>{
-  const before=await page.evaluate(()=>{T.startRun();T.isolate();for(const id of ['obsidian','hunter','astral'])T.addGear(T.rollGear('enemy',1,id),false);T.openInventory();for(const item of [...T.bag].filter(i=>i.slot!=='amulet'))T.equipGear(item.uid);T.closeInventory();const snapshot={max:T.player.maxHp,bag:T.bag.map(i=>i.uid),equipped:Object.values(T.equipment).filter(Boolean).map(i=>i.uid),bonus:{...T.gearBonus}};T.openRoute();return snapshot});
-  const snapshot=()=>page.evaluate(()=>({max:T.player.maxHp,bag:T.bag.map(i=>i.uid),equipped:Object.values(T.equipment).filter(Boolean).map(i=>i.uid),bonus:{...T.gearBonus}}));
-  assert.deepEqual(await snapshot(),before);await page.keyboard.press('2');assert.equal(await page.evaluate(()=>T.room),1);assert.deepEqual(await snapshot(),before);assert.equal(await page.evaluate(()=>T.chest),null);
- });
- await check('item do baú e seu bônus permanecem ao mudar de temática',async()=>{
-  await bossReward();await page.evaluate(()=>T.teleport(800,520));await page.keyboard.press('e');const uid=await page.evaluate(()=>T.chest.offers[0].uid);
-  await page.keyboard.press('1');await page.locator(`[data-gear-equip="${uid}"]`).click();const max=await page.evaluate(()=>T.player.maxHp);await page.keyboard.press('i');
-  await page.evaluate(()=>T.teleport(800,300));await page.keyboard.press('e');await page.keyboard.press('2');
-  assert.deepEqual(await page.evaluate(()=>({room:T.room,theme:T.stages[T.room].theme,level:T.stages[T.room].roomInRealm,chest:T.chest})),{room:6,theme:'forest',level:0,chest:null});
-  assert.equal(await page.evaluate(()=>T.equipment.armor.uid),uid);assert.equal(await page.evaluate(()=>T.player.maxHp),max);assert.equal(await page.locator('#route i').count(),6);
- });
- await check('morte limpa todos os itens e bônus, preservando cinzas e maestria',async()=>{
-  const info=await page.evaluate(()=>{T.startRun();T.isolate();T.addGear(T.rollGear('enemy',1,'obsidian'),false);T.openInventory();T.equipGear(T.bag[0].uid);T.closeInventory();T.addGear(T.rollGear('enemy',2,'astral'),false);T.killEnemy(T.spawnEnemy('shade',500,500));const ash=T.save.ash,earned=T.runAsh,mastery=JSON.stringify(T.save.mastery),base=T.player.maxHp-(T.gearBonus.health||0);T.player.invuln=0;T.takeDamage(99999);return{state:T.state,bag:T.bag.length,equipped:Object.values(T.equipment).filter(Boolean).length,max:T.player.maxHp,base,ash:T.save.ash===ash+earned,mastery:JSON.stringify(T.save.mastery)===mastery,chest:T.chest}});
-  assert.equal(info.state,'result');assert.equal(info.bag,0);assert.equal(info.equipped,0);assert.equal(info.max,info.base);assert.equal(info.ash,true);assert.equal(info.mastery,true);assert.equal(info.chest,null);
- });
- await check('reiniciar começa vazio, sem baú inicial',async()=>{
-  await page.locator('[data-choice="1"]').click();assert.deepEqual(await page.evaluate(()=>({state:T.state,bag:T.bag.length,equipped:Object.values(T.equipment).filter(Boolean).length,chest:T.chest,wave:T.wave})),{state:'playing',bag:0,equipped:0,chest:null,wave:0});
- });
- await check('chefe final permite abrir seu baú antes de concluir e apagar os itens no portal',async()=>{
-  await bossReward(65);assert.equal(await page.evaluate(()=>T.state),'playing');assert.equal(await page.evaluate(()=>T.portal),true);assert.ok(await page.evaluate(()=>!!T.chest));
-  await choose(0);const uid=await page.evaluate(()=>T.bag[0].uid);await page.evaluate(()=>T.advance(10));assert.equal(await page.evaluate(()=>T.state),'playing');assert.ok(await page.evaluate(uid=>T.bag.some(i=>i.uid===uid),uid));assert.equal(await page.evaluate(()=>T.chest),null);
-  await page.keyboard.press('i');await page.locator(`[data-gear-equip="${uid}"]`).click();await page.keyboard.press('i');await page.evaluate(()=>T.teleport(800,300));await page.keyboard.press('e');
-  assert.equal(await page.evaluate(()=>T.state),'result');assert.equal(await page.evaluate(()=>T.bag.length),0);assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),0);assert.equal(await page.evaluate(()=>T.gearBonus.health||0),0);
- });
- await check('cada arena gera só seu guardião antes da segunda fase, sem baú antecipado',async()=>{
+ await check('escolher um novo item substitui o anterior sem guardar, vender ou acumular bônus',async()=>{
+  await start();const r=await page.evaluate(()=>{T.isolate();const a=T.rollGear('enemy',0,'hunter'),b=T.rollGear('enemy',2,'precision');T.addGear(a,false);const gold=T.gold;T.addGear(b,false);T.openInventory();return{newItem:T.equipment.ring.uid===b.uid,oldGone:!Object.values(T.equipment).some(i=>i?.uid===a.uid),count:Object.values(T.equipment).filter(Boolean).length,attack:T.gearBonus.attack,expected:b.stats.attack,gold:T.gold===gold}});
+  assert.equal(r.newItem,true);assert.equal(r.oldGone,true);assert.equal(r.count,1);assert.equal(r.attack,r.expected);assert.equal(r.gold,true);assert.equal(await page.locator('.bag-item,.gear-bag,[data-gear-equip],[data-gear-unequip],[data-gear-sell]').count(),0);await page.screenshot({path:path.join(__dirname,'previa-equipamentos.png')});await page.keyboard.press('i');
+ }); await check('substituição de armadura remove o bônus antigo e não restaura vida',async()=>{
+  const r=await page.evaluate(()=>{T.startRun(0);T.isolate();const base=T.player.maxHp,a=T.rollGear('enemy',2,'obsidian'),b=T.rollGear('enemy',0,'windcloak');T.player.hp=50;T.addGear(a,false);const hp=T.player.hp;T.addGear(b,false);return{hp,after:T.player.hp,max:T.player.maxHp,expected:base+b.stats.health}});assert.equal(r.hp,50);assert.equal(r.after,50);assert.equal(r.max,r.expected);
+ }); await check('equipamentos e bônus permanecem ao atravessar o portal',async()=>{
+  const before=await page.evaluate(()=>{T.startRun(0);T.isolate();for(const id of ['obsidian','hunter','astral'])T.addGear(T.rollGear('enemy',1,id),false);const r={max:T.player.maxHp,equipped:Object.values(T.equipment).map(i=>i.uid),bonus:{...T.gearBonus}};T.openRoute();return r});const snapshot=()=>page.evaluate(()=>({max:T.player.maxHp,equipped:Object.values(T.equipment).map(i=>i.uid),bonus:{...T.gearBonus}}));assert.deepEqual(await snapshot(),before);await page.keyboard.press('2');assert.equal(await page.evaluate(()=>T.room),1);assert.deepEqual(await snapshot(),before);
+ }); await check('equipamento escolhido no baú acompanha a mudança de temática',async()=>{
+  await bossReward();await page.evaluate(()=>T.teleport(800,520));await page.keyboard.press('e');const uid=await page.evaluate(()=>T.chest.offers[0].uid);await page.keyboard.press('1');const max=await page.evaluate(()=>T.player.maxHp);await page.evaluate(()=>T.teleport(800,300));await page.keyboard.press('e');await page.keyboard.press('2');assert.equal(await page.evaluate(()=>T.room),6);assert.equal(await page.evaluate(()=>T.equipment.armor.uid),uid);assert.equal(await page.evaluate(()=>T.player.maxHp),max);
+ }); await check('morte limpa os três equipamentos e bônus, preservando maestria e cinzas',async()=>{
+  const r=await page.evaluate(()=>{T.resetCampaigns();T.startRun(0);T.isolate();for(const id of ['obsidian','hunter','astral'])T.addGear(T.rollGear('enemy',1,id),false);T.killEnemy(T.spawnEnemy('shade',500,500));const ash=T.save.ash,earned=T.runAsh,mastery=JSON.stringify(T.save.mastery),base=T.player.maxHp-(T.gearBonus.health||0);T.player.invuln=0;T.takeDamage(99999);return{state:T.state,count:Object.values(T.equipment).filter(Boolean).length,max:T.player.maxHp,base,ash:T.save.ash===ash+earned,mastery:JSON.stringify(T.save.mastery)===mastery}});assert.equal(r.state,'result');assert.equal(r.count,0);assert.equal(r.max,r.base);assert.equal(r.ash,true);assert.equal(r.mastery,true);
+ }); await check('reiniciar sem chefes salvos começa vazio e sem baú',async()=>{
+  await page.locator('[data-choice="1"]').click();assert.deepEqual(await page.evaluate(()=>({state:T.state,count:Object.values(T.equipment).filter(Boolean).length,chest:T.chest,wave:T.wave,room:T.room})),{state:'playing',count:0,chest:null,wave:0,room:0});
+ }); await check('conclusão da campanha remove todos os equipamentos',async()=>{
+  await bossReward(65);await choose(0);const uid=await page.evaluate(()=>T.equipment.armor.uid);await page.evaluate(()=>T.advance(4));assert.equal(await page.evaluate(()=>T.equipment.armor.uid),uid);await page.evaluate(()=>T.teleport(800,300));await page.keyboard.press('e');assert.equal(await page.evaluate(()=>T.state),'result');assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),0);assert.equal(await page.evaluate(()=>T.gearBonus.health||0),0);
+ }); await check('cada arena gera só seu guardião antes da segunda fase, sem baú antecipado',async()=>{
   for(let i=0;i<11;i++){
    await start(i*6+5);const r=await page.evaluate(()=>{T.player.invuln=100;T.advance(1.4);T.render();const e=T.enemies.find(e=>!e.dead);return{boss:e.type==='boss',skin:e.skin,expected:T.stages[T.room].boss,count:T.enemies.length,wave:T.wave,chest:T.chest}});
    assert.equal(r.boss,true);assert.equal(r.skin,r.expected);assert.equal(r.count,1);assert.equal(r.wave,1);assert.equal(r.chest,null);
@@ -176,18 +154,16 @@ async function check(name,action){if(process.argv.includes('--celular')&&!name.i
   for(const classId of ['archer','mage']){const r=await page.evaluate(classId=>{T.startRun(0,classId);T.isolate();T.teleport(800,550);const e=T.spawnEnemy('brute',1000,550);e.hp=e.maxHp=1000;e.speed=0;e.cooldown=100;T.aim(1000,535);T.attack();const ranged=T.projectiles.some(p=>p.basic);T.cast();T.cast();T.cast();T.cast();const empty=T.player.cast===0;T.advance(4);return{ranged,empty,restored:T.player.cast===3,hit:e.hp<1000}},classId);assert.deepEqual(r,{ranged:true,empty:true,restored:true,hit:true})}
  });
  await check('movimento, limites e pausa continuam funcionando',async()=>{
-  const r=await page.evaluate(()=>{T.startRun();T.isolate();const x=T.player.x;T.setKeys({d:true});T.advance(.4);const moved=T.player.x>x;T.advance(15);const bounded=T.player.x<1395;T.setKeys({});T.pauseGame();const before=T.player.x;T.setKeys({a:true});T.advance(5);const paused=T.player.x===before;T.pauseGame();T.setKeys({});return{moved,bounded,paused,state:T.state}});assert.deepEqual(r,{moved:true,bounded:true,paused:true,state:'playing'});
+  const r=await page.evaluate(()=>{T.startRun(0);T.isolate();const x=T.player.x;T.setKeys({d:true});T.advance(.4);const moved=T.player.x>x;T.advance(15);const bounded=T.player.x<1395;T.setKeys({});T.pauseGame();const before=T.player.x;T.setKeys({a:true});T.advance(5);const paused=T.player.x===before;T.pauseGame();T.setKeys({});return{moved,bounded,paused,state:T.state}});assert.deepEqual(r,{moved:true,bounded:true,paused:true,state:'playing'});
  });
  await check('talentos e especializações das três classes permanecem disponíveis',async()=>{
   const r=await page.evaluate(()=>{T.resetMastery();return{paths:Object.keys(T.talentPaths).length,nodes:Object.values(T.talentPaths).reduce((n,p)=>n+p.nodes.length,0),classes:Object.keys(T.save.mastery)}});assert.equal(r.paths,6);assert.equal(r.nodes,18);assert.deepEqual(r.classes.sort(),['archer','mage','warrior']);await page.evaluate(()=>T.openTalents());assert.equal(await page.locator('.talent-path').count(),2);await page.keyboard.press('t');
  });
- await check('mochila conserva mais de 24 itens durante a campanha sem bloquear novas recompensas',async()=>{
-  const r=await page.evaluate(()=>{T.startRun();T.isolate();const first=T.rollGear('enemy',0,'hunter');T.addGear(first,false);T.openInventory();T.equipGear(first.uid);T.closeInventory();for(let i=0;i<30;i++)T.addGear(T.rollGear('enemy',0,'precision'),false);const uid=T.bag[0].uid;T.openInventory();const swapped=T.equipGear(uid);return{swapped,count:T.bag.length,old:T.bag.some(i=>i.uid===first.uid),gold:T.gold}});assert.deepEqual(r,{swapped:true,count:30,old:true,gold:0});await page.keyboard.press('i');
- });
- await check('bônus dos equipamentos e bênçãos de vitalidade atravessam as fases juntos',async()=>{
-  const r=await page.evaluate(()=>{T.startRun(6,'warrior');T.isolate();const base=T.player.maxHp;T.addGear(T.rollGear('enemy',3,'obsidian'),false);T.openInventory();T.equipGear(T.bag[0].uid);T.closeInventory();const max=T.player.maxHp;T.setupRoom(7);return{base,max,current:T.player.maxHp,equipped:!!T.equipment.armor}});assert.ok(r.max>r.base);assert.equal(r.current,r.max);assert.equal(r.equipped,true);
- });
- async function eventRoom(room){await start(room);await page.evaluate(()=>T.completeCurrentEncounter());await page.keyboard.press('1');await page.evaluate(()=>T.advance(.05))}
+ await check('trinta escolhas mantêm apenas o último equipamento do mesmo tipo',async()=>{
+  const r=await page.evaluate(()=>{T.startRun(0);T.isolate();let last;for(let i=0;i<30;i++){last=T.rollGear('enemy',i%4,'precision');T.addGear(last,false)}return{count:Object.values(T.equipment).filter(Boolean).length,uid:T.equipment.ring.uid,last:last.uid,attack:T.gearBonus.attack,expected:last.stats.attack}});assert.equal(r.count,1);assert.equal(r.uid,r.last);assert.equal(r.attack,r.expected);
+ }); await check('bônus equipados e bênçãos atravessam as fases sem duplicação',async()=>{
+  const r=await page.evaluate(()=>{T.startRun(6,'warrior');const item=T.rollGear('enemy',3,'obsidian');T.addGear(item,false);const max=T.player.maxHp;T.setupRoom(7);return{max,current:T.player.maxHp,equipped:T.equipment.armor.uid===item.uid}});assert.equal(r.current,r.max);assert.equal(r.equipped,true);
+ }); async function eventRoom(room){await start(room);await page.evaluate(()=>T.completeCurrentEncounter());await page.keyboard.press('1');await page.evaluate(()=>T.advance(.05))}
  async function approachEvent(){await page.evaluate(()=>{T.teleport(T.roomEvent.x,T.roomEvent.y);T.advance(.05)});await page.keyboard.press('e')}
  await check('encontros só surgem após as duas ondas e a bênção, sem aparecer nas arenas de chefes',async()=>{
   for(const [room,kind]of [[0,'wanderer'],[2,'altar'],[3,'secret']]){
@@ -230,7 +206,7 @@ async function check(name,action){if(process.argv.includes('--celular')&&!name.i
  });
  await check('passagem secreta se revela por proximidade e mantém a contagem e os equipamentos',async()=>{
   await eventRoom(3);assert.equal(await page.evaluate(()=>T.roomEvent.discovered),false);
-  const before=await page.evaluate(()=>{const item=T.rollGear('enemy',2,'obsidian');T.addGear(item,false);T.openInventory();T.equipGear(item.uid);T.closeInventory();return{room:T.room,wave:T.wave,uid:item.uid,max:T.player.maxHp,gold:T.gold}});
+  const before=await page.evaluate(()=>{const item=T.rollGear('enemy',2,'obsidian');T.addGear(item,false);return{room:T.room,wave:T.wave,uid:item.uid,max:T.player.maxHp,gold:T.gold}});
   await page.evaluate(()=>{T.teleport(1260,540);T.advance(.05);T.render()});assert.equal(await page.evaluate(()=>T.roomEvent.discovered),true);await page.screenshot({path:path.join(__dirname,'previa-passagem-secreta.png')});await page.keyboard.press('e');
   assert.equal(await page.evaluate(()=>T.roomEvent.inside),true);assert.equal(await page.evaluate(()=>T.room),before.room);assert.equal(await page.evaluate(()=>T.wave),before.wave);assert.equal(await page.evaluate(()=>T.equipment.armor.uid),before.uid);assert.equal(await page.evaluate(()=>T.player.maxHp),before.max);assert.equal(await page.evaluate(()=>T.eventStats.secrets),1);assert.match(await page.locator('#roomName').innerText(),/ENTRE OS MUNDOS/);
   await page.evaluate(()=>{T.pickups.push({x:800,y:680,type:'gold',value:100});T.advance(.5);T.nextRoom();T.render()});assert.equal(await page.evaluate(()=>T.gold),before.gold);assert.equal(await page.evaluate(()=>T.room),3);assert.equal(await page.evaluate(()=>T.chest),null);await page.screenshot({path:path.join(__dirname,'previa-sala-secreta.png')});
@@ -255,44 +231,74 @@ async function check(name,action){if(process.argv.includes('--celular')&&!name.i
   await p.evaluate(()=>{T.setupRoom(3);T.completeCurrentEncounter()});await p.locator('[data-choice="0"]').tap();await p.evaluate(()=>{T.teleport(1260,540);T.advance(.05)});await p.locator('[data-action="cast"]').tap();assert.equal(await p.evaluate(()=>T.roomEvent.inside),true);await p.evaluate(()=>T.render());await p.screenshot({path:path.join(__dirname,'previa-sala-secreta-celular.png')});
   await p.evaluate(()=>T.teleport(800,455));await p.locator('[data-action="cast"]').tap();assert.equal(await p.evaluate(()=>T.state),'event');await p.locator('[data-choice="0"]').tap();assert.equal(await p.evaluate(()=>T.eventBonus.damage),.12);await p.evaluate(()=>T.teleport(800,740));await p.locator('[data-action="cast"]').tap();assert.equal(await p.evaluate(()=>T.roomEvent.inside),false);assert.equal(await p.evaluate(()=>T.room),3);assert.equal(await p.evaluate(()=>T.chest),null);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await mobile.close();
  });
- await check('campanha completa preserva itens por 55 níveis e 11 chefes, limpando apenas na vitória',async()=>{
-  await start(0,'archer','longbow');let firstItem=null;
-  for(let room=0;room<66;room++){
-   assert.equal(await page.evaluate(()=>T.room),room);assert.equal(await page.evaluate(()=>T.chest),null);await page.evaluate(()=>T.completeCurrentEncounter());
-   const boss=room%6===5;
-   if(room!==65){assert.equal(await page.evaluate(()=>T.state),'blessing',`Sala ${room}`);await page.keyboard.press('1')}
-   if(boss){
-    assert.ok(await page.evaluate(()=>!!T.chest));await choose(room%3);
-    if(firstItem===null){firstItem=await page.evaluate(()=>T.bag.at(-1).uid);await page.keyboard.press('i');await page.locator(`[data-gear-equip="${firstItem}"]`).click();await page.keyboard.press('i')}
-    await page.evaluate(()=>{T.ensureChest();T.render()});assert.equal(await page.evaluate(()=>T.chest),null);
-   }else{assert.equal(await page.evaluate(()=>T.wave),2);assert.equal(await page.evaluate(()=>T.chest),null)}
-   if(firstItem!==null)assert.ok(await page.evaluate(uid=>T.bag.some(i=>i.uid===uid)||Object.values(T.equipment).some(i=>i?.uid===uid),firstItem),`Item inicial perdido na sala ${room}`);
-   await page.evaluate(()=>T.teleport(800,300));await page.keyboard.press('e');
-   if(room===65){assert.equal(await page.evaluate(()=>T.state),'result');assert.match(await page.locator('#modalTitle').innerText(),/alvorecer/i);break}
-   assert.equal(await page.evaluate(()=>T.state),'route');await page.keyboard.press('2');
+ await check('itens no chão exigem escolha e não substituem nada por aproximação',async()=>{
+  const before=await page.evaluate(()=>{T.startRun(0);T.isolate();T.addGear(T.rollGear('enemy',0,'hunter'),false);const old=T.equipment.ring.uid,item=T.rollGear('enemy',2,'precision');T.pickups.push({x:T.player.x,y:T.player.y,type:'gear',item});T.advance(.2);return{old,uid:item.uid,count:T.pickups.length}});assert.equal(await page.evaluate(()=>T.equipment.ring.uid),before.old);await page.keyboard.press('e');assert.equal(await page.evaluate(()=>T.state),'gearChoice');await page.keyboard.press('1');assert.equal(await page.evaluate(()=>T.equipment.ring.uid),before.uid);assert.equal(await page.evaluate(()=>T.pickups.length),0);
+ });
+ await check('dispensar item no chão não modifica o equipamento atual',async()=>{
+  const uid=await page.evaluate(()=>{T.startRun(0);T.isolate();T.addGear(T.rollGear('enemy',1,'hunter'),false);T.pickups.push({x:T.player.x,y:T.player.y,type:'gear',item:T.rollGear('enemy',0,'precision')});return T.equipment.ring.uid});await page.keyboard.press('e');await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>T.equipment.ring.uid),uid);assert.equal(await page.evaluate(()=>T.pickups.length),0);
+ });
+ await check('limpar níveis sem matar chefe não grava avanço da campanha',async()=>{
+  await page.evaluate(()=>T.resetCampaigns());await start(4);await page.evaluate(()=>T.completeCurrentEncounter());assert.equal(await page.evaluate(()=>T.completedLevels('warrior')),0);await page.reload();await page.locator('#start').click();assert.equal(await page.evaluate(()=>T.room),0);assert.match(await page.locator('#campaignProgress').innerText(),/0 \/ 55/);
+ });
+ await check('chefe grava cinco níveis imediatamente e não duplica a contagem',async()=>{
+  const r=await page.evaluate(()=>{T.resetCampaigns();T.startRun(5);T.player.invuln=100;T.advance(1.4);const boss=T.enemies.find(e=>e.type==='boss');T.killEnemy(boss);const first=T.completedLevels('warrior');T.killEnemy(boss);T.commitBossCheckpoint();return{first,after:T.completedLevels('warrior'),other:T.completedLevels('archer'),stored:JSON.parse(localStorage.getItem('cinzas-save-v1')).campaigns.warrior.clearedRealms}});assert.deepEqual(r,{first:5,after:5,other:0,stored:1});
+  await page.reload();await page.locator('#start').click();assert.equal(await page.evaluate(()=>T.room),6);
+ });
+ await check('equipamento do chefe é salvo no checkpoint e volta equipado ao recarregar',async()=>{
+  await page.evaluate(()=>T.resetCampaigns());await bossReward(5);await choose(0);const before=await page.evaluate(()=>({template:T.equipment.armor.templateId,max:T.player.maxHp,bonus:T.gearBonus.health,boons:T.boons.map(b=>b.id)}));await page.reload();await page.locator('#start').click();assert.equal(await page.evaluate(()=>T.room),6);assert.deepEqual(await page.evaluate(()=>({template:T.equipment.armor.templateId,max:T.player.maxHp,bonus:T.gearBonus.health,boons:T.boons.map(b=>b.id)})),before);
+ });
+ await check('avanço entre chefes não altera checkpoint e morte mantém os níveis sem itens',async()=>{
+  await page.evaluate(()=>{T.setupRoom(9);T.completeCurrentEncounter()});await page.keyboard.press('1');assert.equal(await page.evaluate(()=>T.completedLevels('warrior')),5);await page.reload();await page.locator('#start').click();assert.equal(await page.evaluate(()=>T.room),6);
+  await page.evaluate(()=>{T.player.invuln=0;T.player.dash=0;T.player.revive=false;T.takeDamage(99999)});assert.equal(await page.evaluate(()=>T.state),'result');assert.equal(await page.evaluate(()=>T.completedLevels('warrior')),5);assert.equal(await page.evaluate(()=>T.campaignFor('warrior').checkpoint),null);await page.locator('[data-choice="1"]').click();assert.equal(await page.evaluate(()=>T.room),6);assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),0);
+ });
+ await check('Guerreiro, Arqueiro e Mago retomam seus próprios checkpoints',async()=>{
+  await page.evaluate(()=>T.resetCampaigns());
+  for(const [id,bosses]of [['warrior',2],['archer',1],['mage',0]]){
+   for(let i=0;i<bosses;i++)await page.evaluate(({id,i})=>{T.startRun(i*6+5,id);T.player.invuln=100;T.advance(1.4);T.killEnemy(T.enemies.find(e=>e.type==='boss'))},{id,i});
   }
-  assert.equal(await page.evaluate(()=>T.bag.length),0);assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),0);assert.equal(await page.evaluate(()=>T.chest),null);
+  await page.reload();for(const [id,room,levels]of [['warrior',12,10],['archer',6,5],['mage',0,0]]){
+   await page.evaluate(()=>T.backToMenu());await page.locator(`[data-class="${id}"]`).click();assert.match(await page.locator('#campaignProgress').innerText(),new RegExp(levels+' / 55'));await page.locator('#start').click();assert.equal(await page.evaluate(()=>T.room),room);assert.equal(await page.evaluate(()=>T.player.classId),id);
+  }
  });
- await check('salvamento mantém progresso e nova tentativa não herda itens',async()=>{
-  const before=await page.evaluate(()=>({ash:T.save.ash,wins:T.save.wins,mastery:T.save.mastery}));await page.reload();assert.deepEqual(await page.evaluate(()=>({ash:T.save.ash,wins:T.save.wins,mastery:T.save.mastery})),before);await start();assert.equal(await page.evaluate(()=>T.bag.length),0);
+ await check('salvamentos antigos não convertem salas visitadas em níveis concluídos',async()=>{
+  await page.evaluate(()=>localStorage.setItem('cinzas-save-v1',JSON.stringify({ash:50,level:2,best:66,selectedClass:'warrior'})));await page.reload();assert.deepEqual(await page.evaluate(()=>Object.keys(T.classes).map(id=>T.completedLevels(id))),[0,0,0]);assert.equal(await page.evaluate(()=>T.save.ash),50);assert.equal(await page.evaluate(()=>T.save.level),2);
  });
- await check('gera prévias da floresta, do chefe e do baú após sua derrota',async()=>{
+ await check('recomeçar uma classe exige escolha e não apaga as demais',async()=>{
+  await page.evaluate(()=>{T.resetCampaigns();for(const id of ['warrior','archer']){T.startRun(5,id);T.player.invuln=100;T.advance(1.4);T.killEnemy(T.enemies.find(e=>e.type==='boss'))}T.backToMenu();T.selectClass('warrior')});await page.locator('#startRealms').click();assert.equal(await page.evaluate(()=>T.state),'campaignReset');await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>T.completedLevels('warrior')),5);await page.locator('#startRealms').click();await page.locator('[data-choice="0"]').click();assert.equal(await page.evaluate(()=>T.room),0);assert.equal(await page.evaluate(()=>T.completedLevels('warrior')),0);assert.equal(await page.evaluate(()=>T.completedLevels('archer')),5);
+ });
+
+ await check('portal tem prioridade sobre equipamentos caídos ao lado da saída',async()=>{
+  await eventRoom(1);await page.evaluate(()=>{T.teleport(800,300);T.pickups.push({x:800,y:300,type:'gear',item:T.rollGear('enemy',0,'hunter')});T.advance(.01)});await page.keyboard.press('e');assert.equal(await page.evaluate(()=>T.state),'route');await page.keyboard.press('2');assert.equal(await page.evaluate(()=>T.room),2);
+ });
+ await check('equipamento de fase não confirmada não altera o snapshot do último chefe',async()=>{
+  await page.evaluate(()=>T.resetCampaigns());await bossReward(5);await choose(0);const before=await page.evaluate(()=>JSON.stringify(T.campaignFor('warrior').checkpoint));await page.evaluate(()=>{T.setupRoom(7);T.addGear(T.rollGear('enemy',3,'hunter'),false)});assert.equal(await page.evaluate(()=>JSON.stringify(T.campaignFor('warrior').checkpoint)),before);await page.reload();await page.locator('#start').click();assert.equal(await page.evaluate(()=>T.room),6);assert.equal(await page.evaluate(()=>T.equipment.ring),null);
+ });
+ await check('checkpoint danificado mantém a posição confirmada sem produzir atributos inválidos',async()=>{
+  await page.evaluate(()=>{const data=JSON.parse(localStorage.getItem('cinzas-save-v1'));data.campaigns.warrior.checkpoint.player.maxHp='inválido';localStorage.setItem('cinzas-save-v1',JSON.stringify(data))});await page.reload();await page.locator('#start').click();assert.equal(await page.evaluate(()=>T.room),6);assert.equal(await page.evaluate(()=>Number.isFinite(T.player.maxHp)&&T.player.maxHp>0),true);assert.ok(await page.evaluate(()=>T.boons.length>=4));assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),0);
+ });
+ await check('campanha concluída oferece recomeço explícito em vez de travar o botão de repetir',async()=>{
+  await page.evaluate(()=>{T.campaignFor('warrior').clearedRealms=11;T.finishRun(true)});await page.locator('[data-choice="1"]').click();assert.equal(await page.evaluate(()=>T.state),'campaignReset');await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>T.state),'menu');assert.equal(await page.evaluate(()=>T.completedLevels('warrior')),55);await page.screenshot({path:path.join(__dirname,'previa-progresso-classe.png')});
+ });
+ await check('campanha confirma somente cinco níveis por chefe e conclui os 55 níveis',async()=>{
+  await page.evaluate(()=>T.resetCampaigns());await start(0,'archer','longbow');
+  for(let room=0;room<66;room++){
+   assert.equal(await page.evaluate(()=>T.room),room);await page.evaluate(()=>T.completeCurrentEncounter());const boss=room%6===5;
+   assert.equal(await page.evaluate(()=>T.completedLevels('archer')),Math.floor((room+1)/6)*5,`Contagem da sala ${room}`);
+   if(room!==65){assert.equal(await page.evaluate(()=>T.state),'blessing');await page.keyboard.press('1')}
+   if(boss){await choose(room%3);assert.equal(await page.evaluate(()=>T.chest),null)}else assert.equal(await page.evaluate(()=>T.wave),2);
+   await page.evaluate(()=>T.teleport(800,300));await page.keyboard.press('e');if(room===65){assert.equal(await page.evaluate(()=>T.state),'result');break}await page.keyboard.press('2');
+  }
+  assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),0);assert.equal(await page.evaluate(()=>T.completedLevels('archer')),55);assert.equal(await page.evaluate(()=>T.completedLevels('warrior')),0);assert.equal(await page.evaluate(()=>T.completedLevels('mage')),0);
+ }); await check('salvamento mantém níveis confirmados, cinzas e maestria após recarregar',async()=>{
+  const before=await page.evaluate(()=>({ash:T.save.ash,campaigns:T.save.campaigns,mastery:T.save.mastery}));await page.reload();assert.deepEqual(await page.evaluate(()=>({ash:T.save.ash,campaigns:T.save.campaigns,mastery:T.save.mastery})),before);await start(0);assert.equal(await page.evaluate(()=>Object.values(T.equipment).filter(Boolean).length),0);
+ }); await check('gera prévias da floresta, do chefe e do baú após sua derrota',async()=>{
   await start(10,'mage','icestaff');await page.evaluate(()=>{T.player.invuln=100;T.advance(1.5)});await page.screenshot({path:path.join(__dirname,'previa-floresta.png')});
   await start(11,'warrior','spear');await page.evaluate(()=>{T.player.invuln=100;T.advance(1.5)});await page.screenshot({path:path.join(__dirname,'previa-chefe-floresta.png')});
   await page.evaluate(()=>T.completeCurrentEncounter());await page.keyboard.press('1');await page.screenshot({path:path.join(__dirname,'previa-bau-chefe.png')});
  });
- await check('baú, troca e painel da campanha são utilizáveis no celular',async()=>{
-  const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true}),p=await mobile.newPage();p.on('pageerror',e=>errors.push(e.message));
-  await mobile.route('https://cinzas.test/**',route=>route.fulfill({contentType:'text/html',body:testHtml}));await p.goto('https://cinzas.test');await p.locator('#start').tap();
-  assert.equal(await p.evaluate(()=>T.chest),null);await p.evaluate(()=>{T.startRun(11,'warrior');T.completeCurrentEncounter()});await p.locator('[data-choice="0"]').tap();await p.evaluate(()=>T.teleport(800,520));
-  await p.locator('[data-action="cast"]').tap();await p.locator('.chest-choices').waitFor();assert.equal(await p.evaluate(()=>T.state),'chestChoice');
-  assert.ok((await p.locator('#modalTitle').boundingBox()).y>=0);assert.equal(await p.locator('.chest-choices .choice').count(),3);assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  for(const choice of await p.locator('.chest-choices .choice').all()){const box=await choice.boundingBox();assert.ok(box.width>200);assert.ok(box.x>=0&&box.x+box.width<=390)}
-  await p.screenshot({path:path.join(__dirname,'previa-bau-celular.png'),fullPage:true});
-  await p.locator('[data-choice="2"]').tap();assert.equal(await p.evaluate(()=>T.chest),null);assert.equal(await p.evaluate(()=>T.bag.length),1);await p.locator('[data-gear-equip]').tap();assert.equal(await p.locator('[data-gear-sell]').count(),0);await p.screenshot({path:path.join(__dirname,'previa-inventario-celular.png')});
-  await p.locator('[data-inventory-close]').tap();await p.evaluate(()=>{T.ensureChest();T.advance(.1)});assert.equal(await p.evaluate(()=>T.chest),null);
-  await p.evaluate(()=>T.teleport(800,300));await p.locator('[data-action="cast"]').tap();assert.equal(await p.evaluate(()=>T.state),'route');await p.locator('[data-choice="1"]').tap();assert.equal(await p.evaluate(()=>!!T.equipment.amulet),true);assert.equal(await p.evaluate(()=>T.chest),null);await p.screenshot({path:path.join(__dirname,'previa-celular.png')});await mobile.close();
- });
- assert.deepEqual(errors,[]);console.log(`\n${passed} verificações passaram. Nenhum erro de JavaScript.`);await context.close();
+ await check('baú equipa diretamente e painel sem mochila é utilizável no celular',async()=>{
+  const mobile=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true}),p=await mobile.newPage();p.on('pageerror',e=>errors.push(e.message));await mobile.route('https://cinzas.test/**',route=>route.fulfill({contentType:'text/html',body:testHtml}));await p.goto('https://cinzas.test');await p.locator('#start').tap();await p.evaluate(()=>{T.startRun(5);T.completeCurrentEncounter()});await p.locator('[data-choice="0"]').tap();await p.evaluate(()=>T.teleport(800,520));await p.locator('[data-action="cast"]').tap();assert.equal(await p.evaluate(()=>T.state),'chestChoice');await p.locator('[data-choice="2"]').tap();assert.equal(await p.evaluate(()=>T.state),'playing');assert.equal(await p.evaluate(()=>!!T.equipment.amulet),true);assert.equal(await p.evaluate(()=>T.chest),null);
+  await p.locator('#inventoryButton').tap();assert.equal(await p.locator('.equipped-list .gear-detail-card').count(),3);assert.equal(await p.locator('.bag-item,[data-gear-unequip],[data-gear-equip]').count(),0);await p.screenshot({path:path.join(__dirname,'previa-equipamentos-celular.png')});await p.locator('[data-inventory-close]').tap();await p.evaluate(()=>T.teleport(800,300));await p.locator('[data-action="cast"]').tap();await p.locator('[data-choice="1"]').tap();assert.equal(await p.evaluate(()=>T.room),6);assert.equal(await p.evaluate(()=>!!T.equipment.amulet),true);assert.equal(await p.evaluate(()=>T.completedLevels('warrior')),5);await mobile.close();
+ }); assert.deepEqual(errors,[]);console.log(`\n${passed} verificações passaram. Nenhum erro de JavaScript.`);await context.close();
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

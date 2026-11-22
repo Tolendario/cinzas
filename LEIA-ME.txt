@@ -11,7 +11,14 @@ São 11 temáticas. Em cada uma:
 A campanha completa tem 55 níveis normais e 11 arenas de chefes (66 salas).
 Os cinco níveis mantêm a mesma temática, criaturas e perigos do reino.
 O indicador superior mostra reino, nível e seis marcadores: cinco níveis + chefe.
-O botão Começar na Floresta inicia diretamente no segundo reino.
+O salvamento é separado para Guerreiro, Arqueiro e Mago.
+Somente um chefe derrotado confirma seu bloco de cinco níveis: 0, 5, 10, ... 55.
+Concluir níveis comuns não grava avanço. Ao morrer ou recarregar, a classe retoma
+no início da próxima temática confirmada pelo último chefe derrotado.
+Recarregar recupera os equipamentos escolhidos no último checkpoint. Morrer ou
+encerrar a tentativa mantém os níveis confirmados, mas remove os equipamentos.
+O menu mostra a contagem e o destino da classe selecionada. Continuar retoma esse
+ponto; Recomeçar esta classe pede uma escolha antes de zerar apenas essa campanha.
 
 REINOS E CHEFES
 Érebo — Óbex, o Carcereiro do Érebo
@@ -46,24 +53,27 @@ A sala secreta não acrescenta níveis, não contém baú e preserva os itens.
 A campanha continua com 55 níveis, duas ondas por nível e 11 chefes.
 
 BAÚ E EQUIPAMENTOS
-Cada tentativa começa com mochila e espaços de equipamento vazios.
+Não há mochila, armazenamento ou acúmulo de equipamentos.
+Há somente três espaços em uso: armadura, anel e amuleto.
 Os combates começam normalmente, sem baú inicial.
 Um baú aparece no centro da arena SOMENTE após derrotar o chefe de cada temática.
 Aproxime-se e pressione E para abri-lo.
 Escolha apenas UM dos três itens: uma armadura, um anel ou um amuleto.
 O baú DESAPARECE após a escolha e não pode reaparecer naquele reino.
 A partida pausa enquanto você escolhe.
-O inventário abre com o item escolhido; equipe-o e feche com I para continuar.
-Inimigos também podem deixar equipamentos.
-Mochila, equipamentos e bônus permanecem ao mudar de nível ou temática.
-Use I para comparar e trocar os itens. A peça substituída volta para a mochila.
+O item escolhido é equipado imediatamente. A peça anterior do mesmo tipo é
+destruída e não pode ser recuperada. Os bônus antigos são removidos.
+Inimigos também podem deixar itens: aproxime-se e pressione E para comparar,
+escolher a substituição ou dispensar. Aproximar-se não equipa automaticamente.
+Os três equipamentos e seus bônus permanecem ao mudar de nível ou temática.
+I abre somente a visualização dos equipamentos em uso, com a partida pausada.
 Não há venda de equipamentos nem ganho de óbolos por trocar itens.
-Ao morrer, encerrar a tentativa ou concluir a campanha, toda a mochila e todos
-os equipamentos são apagados, juntamente com seus bônus e efeitos.
+Ao morrer, encerrar a tentativa ou concluir a campanha, os equipamentos são
+apagados, juntamente com seus bônus e efeitos.
 Depois do último chefe, você ainda pode abrir o baú. Atravesse o portal para
 concluir a ascensão dos 55 níveis e 11 chefes e zerar os equipamentos.
 Trocar itens de vitalidade não cura; perder o bônus reduz o máximo e limita a vida atual.
-Raridades: Comum, Raro, Épico e Lendário. A mochila comporta os itens da tentativa.
+Raridades: Comum, Raro, Épico e Lendário. Nunca há itens guardados para trocar depois.
 
 CONTROLES
 WASD ou setas: mover. Mouse: mirar.
@@ -71,7 +81,7 @@ Clique esquerdo ou J: atacar (segure para encadear golpes).
 Espaço ou Shift: esquiva invulnerável, com duas cargas.
 Q ou K: especial da arma selecionada.
 E, clique direito ou L: magia; perto do baú ou portal, interagir.
-I: inventário, com a partida pausada.
+I: ver os três equipamentos em uso, com a partida pausada.
 T: árvore de talentos. F: armadilha ou familiar, quando aprendido.
 Esc ou P: pausa. H: ajuda. M: som.
 1, 2, 3: selecionar uma opção no baú ou nas recompensas.

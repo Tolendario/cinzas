@@ -11,13 +11,14 @@ Baixe os arquivos do repositório e abra **index.html** em um navegador moderno.
 - Guerreiro, Arqueiro e Mago, com armas e especiais próprios.
 - 55 níveis de duas ondas, organizados em 11 temáticas, cada uma seguida de seu chefe.
 - Baú após cada chefe: escolha um entre três itens. O baú desaparece após a escolha.
-- Armaduras, anéis e amuletos que permanecem entre níveis e temáticas. O inventário zera ao morrer ou concluir a campanha pelo portal final.
-- Troca de equipamentos, comparação de atributos e efeitos especiais, sem venda de itens.
+- Somente três equipamentos em uso: armadura, anel e amuleto. Escolher um novo item equipa imediatamente e destrói o anterior do mesmo tipo. Não há mochila ou armazenamento.
+- Equipamentos permanecem entre fases e desaparecem ao morrer ou concluir a campanha. Itens no chão podem ser examinados com E antes de escolher ou dispensar.
+- Salvamento independente para Guerreiro, Arqueiro e Mago. Cada chefe derrotado confirma cinco níveis; fases intermediárias não gravam avanço. A classe retoma na próxima temática confirmada.
 - Seis especializações, 18 talentos, maestria e melhorias permanentes com cinzas.
 - Pactos opcionais com o Peregrino, altares e passagens para salas secretas.
 - Controles por teclado e mouse ou tela de toque.
 
-O progresso permanente fica salvo no navegador utilizado.
+O progresso fica salvo no navegador utilizado. Recarregar retoma o último chefe confirmado, incluindo os equipamentos escolhidos naquele ponto. Morrer mantém as temáticas liberadas, mas remove os equipamentos da tentativa.
 
 ## Controles
 
@@ -29,7 +30,7 @@ O progresso permanente fica salvo no navegador utilizado.
 | Esquiva | Espaço ou Shift |
 | Especial da arma | Q ou K |
 | Magia / interagir com baú, portal ou evento | E, clique direito ou L |
-| Inventário | I |
+| Ver equipamentos em uso | I |
 | Talentos | T |
 | Habilidade de talento | F, quando aprendida |
 | Pausa | Esc ou P |
@@ -63,4 +64,4 @@ Para verificar somente os controles e as telas de celular:
 npm run test:mobile
 ```
 
-A suíte verifica a campanha completa, chefes, baús, inventário, classes, armas, pactos, custos dos altares e entrada e saída das salas secretas.
+A suíte verifica a campanha completa, chefes, baús, substituição direta dos equipamentos, checkpoints por classe, classes, armas, pactos, custos dos altares e entrada e saída das salas secretas.
