@@ -1,0 +1,107 @@
+CINZAS — ASCENSÃO DO SUBMUNDO
+
+Abra index.html no navegador. Funciona offline, sem instalação.
+Roguelite de ação com arte procedural própria, três classes e dez armas.
+
+CAMPANHA
+São 11 temáticas. Em cada uma:
+1. Complete cinco níveis, cada um com exatamente duas ondas.
+2. Enfrente o chefe próprio daquele reino em uma arena separada.
+3. Após derrotá-lo, receba a bênção e atravesse o portal para a próxima temática.
+A campanha completa tem 55 níveis normais e 11 arenas de chefes (66 salas).
+Os cinco níveis mantêm a mesma temática, criaturas e perigos do reino.
+O indicador superior mostra reino, nível e seis marcadores: cinco níveis + chefe.
+O botão Começar na Floresta inicia diretamente no segundo reino.
+
+REINOS E CHEFES
+Érebo — Óbex, o Carcereiro do Érebo
+Floresta dos Espinhos — Verdan, o Ancião dos Espinhos
+Pântano da Peste — Morga, a Rainha da Peste
+Dunas Escarlates — Khepri, o Escorpião das Dunas
+Geleira dos Ecos — Iska, o Colosso Glacial
+Caldeira do Titã — Pyros, o Titã da Caldeira
+Recife dos Afogados — Nária, a Voz do Abismo
+Biblioteca do Infinito — Oráculus, o Arquivista Eterno
+Torre das Tempestades — Zéfira, a Soberana dos Raios
+Jardim da Lua Partida — Selene, a Caçadora Lunar
+Trono do Sol Devorado — Aurion, a Fênix do Sol Devorado
+Os chefes têm aparência temática, ataques sinalizados e segunda fase com reforços.
+
+PASSO 5 — EVENTOS E CAMINHOS SECRETOS
+Depois de limpar as duas ondas e escolher sua bênção, explore a arena:
+- Nível 1 de cada reino: o Peregrino das Cinzas oferece dois pactos opcionais.
+  Fúria: seus acertos causam +20% de dano, mas você recebe +15% de dano.
+  Ventos: +12% de velocidade, em troca de 15 de vitalidade máxima.
+- Nível 3: um altar oferece +15% de dano por 25 de vida atual ou até 40 de
+  cura por 40 óbolos. Escolhas sem recursos suficientes ficam bloqueadas.
+- Nível 4: há uma fenda discreta na lateral direita. Ela se revela quando
+  você se aproxima e leva a uma câmara secreta com uma oferenda única:
+  +12% de dano ou até 45 de cura. O portal ao sul retorna à mesma fase.
+Pressione E perto do personagem, altar ou fenda. Eventos podem ser ignorados.
+Os custos são mostrados antes da escolha. Esc recusa uma oferta sem pagar.
+Cada encontro aceita uma única escolha e desaparece quando resolvido.
+Pactos e bônus duram a tentativa, acumulam entre reinos e somem ao morrer
+ou concluir a campanha. Os ícones de bênção mostram os efeitos aceitos.
+A sala secreta não acrescenta níveis, não contém baú e preserva os itens.
+A campanha continua com 55 níveis, duas ondas por nível e 11 chefes.
+
+BAÚ E EQUIPAMENTOS
+Cada tentativa começa com mochila e espaços de equipamento vazios.
+Os combates começam normalmente, sem baú inicial.
+Um baú aparece no centro da arena SOMENTE após derrotar o chefe de cada temática.
+Aproxime-se e pressione E para abri-lo.
+Escolha apenas UM dos três itens: uma armadura, um anel ou um amuleto.
+O baú DESAPARECE após a escolha e não pode reaparecer naquele reino.
+A partida pausa enquanto você escolhe.
+O inventário abre com o item escolhido; equipe-o e feche com I para continuar.
+Inimigos também podem deixar equipamentos.
+Mochila, equipamentos e bônus permanecem ao mudar de nível ou temática.
+Use I para comparar e trocar os itens. A peça substituída volta para a mochila.
+Não há venda de equipamentos nem ganho de óbolos por trocar itens.
+Ao morrer, encerrar a tentativa ou concluir a campanha, toda a mochila e todos
+os equipamentos são apagados, juntamente com seus bônus e efeitos.
+Depois do último chefe, você ainda pode abrir o baú. Atravesse o portal para
+concluir a ascensão dos 55 níveis e 11 chefes e zerar os equipamentos.
+Trocar itens de vitalidade não cura; perder o bônus reduz o máximo e limita a vida atual.
+Raridades: Comum, Raro, Épico e Lendário. A mochila comporta os itens da tentativa.
+
+CONTROLES
+WASD ou setas: mover. Mouse: mirar.
+Clique esquerdo ou J: atacar (segure para encadear golpes).
+Espaço ou Shift: esquiva invulnerável, com duas cargas.
+Q ou K: especial da arma selecionada.
+E, clique direito ou L: magia; perto do baú ou portal, interagir.
+I: inventário, com a partida pausada.
+T: árvore de talentos. F: armadilha ou familiar, quando aprendido.
+Esc ou P: pausa. H: ajuda. M: som.
+1, 2, 3: selecionar uma opção no baú ou nas recompensas.
+No celular, use o direcional virtual e os botões na tela.
+
+CLASSES E PROGRESSO
+Guerreiro: espada, machado, lança ou escudo; combate corpo a corpo.
+Arqueiro: arco, besta ou arco venenoso; disparos à distância.
+Mago: cajado de fogo, gelo ou tempestade; magia e controle de área.
+Escolha classe, arma e especialização no menu antes de começar.
+Há seis especializações e 18 talentos. XP, talentos e cinzas permanecem após morrer.
+As cinzas melhoram o Legado permanentemente para todas as classes.
+Bênçãos e equipamentos de baús e inimigos duram a tentativa.
+A seleção de classe, armas, talentos e o progresso são salvos no próprio navegador.
+
+VERIFICAÇÃO
+node cinzas/testes.cjs
+Neste workspace, usa o Playwright já presente em portal-jurassico-testes.
+No repositório independente, execute npm install e npm test na pasta do jogo.
+No Windows usa o Microsoft Edge; nos demais sistemas execute também
+npx playwright install chromium antes dos testes.
+Inclui campanha completa, chefes, escolha única, trocas, descarte, combate e celular.
+Também verifica os pactos, custos dos altares, descoberta e retorno da câmara secreta.
+
+SEQUÊNCIA DE MELHORIAS
+1. Arsenal por classe — implementado.
+2. Equipamentos e itens raros — implementado.
+3. Habilidades e árvores por classe — implementado.
+4. Objetivos variados — implementados anteriormente; a campanha atual usa a regra
+   escolhida pelo jogador: cinco níveis de duas ondas e depois um chefe por reino.
+5. Eventos e caminhos secretos — implementado.
+6. Próximo: refúgio entre tentativas, com treinamento, personagens e desbloqueios.
+7. Depois: variações aleatórias dos mapas mantendo a identidade de cada reino.

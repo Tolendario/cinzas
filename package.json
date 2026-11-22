@@ -1,0 +1,16 @@
+{
+  "name": "cinzas-ascensao-do-submundo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Roguelite de ação em HTML, Canvas e JavaScript.",
+  "scripts": {
+    "test": "node testes.cjs",
+    "test:mobile": "node testes.cjs --celular"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "playwright": "1.65.1"
+  }
+}
