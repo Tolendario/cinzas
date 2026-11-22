@@ -1,7 +1,8 @@
 CINZAS — ASCENSÃO DO SUBMUNDO
 
 Abra index.html no navegador. Funciona offline, sem instalação.
-Roguelite de ação com arte procedural própria, três classes e dez armas.
+Roguelite de ação com arte procedural própria, três classes, dez armas iniciais
+e três armas ancestrais que podem ser desbloqueadas na forja do refúgio.
 
 CAMPANHA
 São 11 temáticas. Em cada uma:
@@ -51,6 +52,27 @@ Pactos e bônus duram a tentativa, acumulam entre reinos e somem ao morrer
 ou concluir a campanha. Os ícones de bênção mostram os efeitos aceitos.
 A sala secreta não acrescenta níveis, não contém baú e preserva os itens.
 A campanha continua com 55 níveis, duas ondas por nível e 11 chefes.
+
+PASSO 6 — REFÚGIO ENTRE TENTATIVAS
+Entre pelo botão Visitar refúgio do menu ou Ir ao refúgio após uma tentativa.
+Use WASD/setas e E perto das estações, ou os botões de acesso rápido.
+Troque a classe pelos botões do refúgio antes de treinar ou continuar a campanha.
+Ícaro, o ferreiro: confirme um chefe com a classe e pague 40 cinzas para forjar
+sua arma ancestral. O desbloqueio é permanente, por classe, e só é cobrado uma vez.
+Guerreiro: Lâmina do alvorecer, com cinco ondas de luz no especial Aurora.
+Arqueiro: Arco do eclipse, com flechas que desaceleram e uma área lunar no especial.
+Mago: Cajado do éter, com projéteis perfurantes e três meteoros no especial.
+Ariadne guarda três missões por classe:
+- Primeira luz: confirme um chefe para resgatar o Manto das brasas.
+- Domínio dos fundamentos: cause 500 de dano no treino e use Q, E e esquiva
+  para resgatar o Véu lunar.
+- Três guardiões, um destino: confirme três chefes para resgatar a Capa do alvorecer.
+Mnemé permite escolher a aparência. Elas são somente visuais, sem bônus de atributos.
+O treinamento usa a arma escolhida contra três bonecos imóveis e recuperáveis.
+Mede dano, acertos e DPS. Não dá XP, cinzas, itens, chefes ou níveis da campanha.
+Zerar a medição não apaga a missão. Voltar ou encerrar o treino retorna ao refúgio
+e conserva o checkpoint da campanha. Aparências e armas desbloqueadas permanecem
+após a morte e após recomeçar a campanha da classe.
 
 BAÚ E EQUIPAMENTOS
 Não há mochila, armazenamento ou acúmulo de equipamentos.
@@ -105,6 +127,7 @@ No Windows usa o Microsoft Edge; nos demais sistemas execute também
 npx playwright install chromium antes dos testes.
 Inclui campanha completa, chefes, escolha única, trocas, descarte, combate e celular.
 Também verifica os pactos, custos dos altares, descoberta e retorno da câmara secreta.
+node cinzas/testes.cjs --refugio verifica apenas o refúgio, missões, forja e treino.
 
 SEQUÊNCIA DE MELHORIAS
 1. Arsenal por classe — implementado.
@@ -113,5 +136,5 @@ SEQUÊNCIA DE MELHORIAS
 4. Objetivos variados — implementados anteriormente; a campanha atual usa a regra
    escolhida pelo jogador: cinco níveis de duas ondas e depois um chefe por reino.
 5. Eventos e caminhos secretos — implementado.
-6. Próximo: refúgio entre tentativas, com treinamento, personagens e desbloqueios.
+6. Refúgio entre tentativas, com treinamento, personagens e desbloqueios — implementado.
 7. Depois: variações aleatórias dos mapas mantendo a identidade de cada reino.

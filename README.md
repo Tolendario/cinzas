@@ -1,6 +1,6 @@
 # Cinzas — Ascensão do Submundo
 
-Jogo de ação roguelite em HTML, CSS e JavaScript, com três classes, dez armas e uma campanha de 11 temáticas. Os gráficos são desenhados em Canvas e os efeitos sonoros são gerados no navegador.
+Jogo de ação roguelite em HTML, CSS e JavaScript, com três classes, dez armas iniciais, três armas ancestrais desbloqueáveis e uma campanha de 11 temáticas. Os gráficos são desenhados em Canvas e os efeitos sonoros são gerados no navegador.
 
 ## Jogar
 
@@ -16,9 +16,22 @@ Baixe os arquivos do repositório e abra **index.html** em um navegador moderno.
 - Salvamento independente para Guerreiro, Arqueiro e Mago. Cada chefe derrotado confirma cinco níveis; fases intermediárias não gravam avanço. A classe retoma na próxima temática confirmada.
 - Seis especializações, 18 talentos, maestria e melhorias permanentes com cinzas.
 - Pactos opcionais com o Peregrino, altares e passagens para salas secretas.
+- Refúgio entre tentativas, com ferreiro, personagens, missões e aparências por classe.
+- Treinamento com três alvos, medição de dano e DPS, sem gastar a tentativa ou conceder XP, cinzas e avanço de campanha.
 - Controles por teclado e mouse ou tela de toque.
 
 O progresso fica salvo no navegador utilizado. Recarregar retoma o último chefe confirmado, incluindo os equipamentos escolhidos naquele ponto. Morrer mantém as temáticas liberadas, mas remove os equipamentos da tentativa.
+
+## Refúgio das Cinzas
+
+Use **Visitar refúgio** no menu ou **Ir ao refúgio** após uma tentativa. Caminhe e pressione E perto de uma estação, ou use os botões de acesso rápido.
+
+- **Ícaro, o ferreiro:** após confirmar um chefe com a classe, forje sua arma ancestral por 40 cinzas. A arma fica desbloqueada permanentemente no arsenal dessa classe.
+- **Ariadne:** resgate aparências ao confirmar um chefe, dominar o treinamento ou confirmar três chefes. Cada recompensa só pode ser resgatada uma vez por classe.
+- **Mnemé:** escolha entre o traje original e as aparências conquistadas. São mudanças apenas visuais.
+- **Treinamento:** experimente a arma escolhida contra três bonecos imóveis. Use Q, E e esquiva e cause 500 de dano para cumprir a missão de treinamento. Zerar a medição não apaga o progresso da missão.
+
+As armas ancestrais são a **Lâmina do alvorecer**, o **Arco do eclipse** e o **Cajado do éter**. Os desbloqueios e as aparências permanecem mesmo após morrer ou recomeçar a campanha da classe.
 
 ## Controles
 
@@ -64,4 +77,10 @@ Para verificar somente os controles e as telas de celular:
 npm run test:mobile
 ```
 
-A suíte verifica a campanha completa, chefes, baús, substituição direta dos equipamentos, checkpoints por classe, classes, armas, pactos, custos dos altares e entrada e saída das salas secretas.
+Para verificar somente o refúgio, o treinamento e os desbloqueios:
+
+```sh
+npm run test:refuge
+```
+
+A suíte verifica a campanha completa, chefes, baús, substituição direta dos equipamentos, checkpoints por classe, classes, armas, pactos, salas secretas e os fluxos do refúgio, incluindo treinamento e desbloqueios permanentes.

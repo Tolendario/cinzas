@@ -5,7 +5,8 @@
   "description": "Roguelite de ação em HTML, Canvas e JavaScript.",
   "scripts": {
     "test": "node testes.cjs",
-    "test:mobile": "node testes.cjs --celular"
+    "test:mobile": "node testes.cjs --celular",
+    "test:refuge": "node testes.cjs --refugio"
   },
   "engines": {
     "node": ">=20"
