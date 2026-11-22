@@ -42,7 +42,7 @@ Depois de limpar as duas ondas e escolher sua bênção, explore a arena:
   Ventos: +12% de velocidade, em troca de 15 de vitalidade máxima.
 - Nível 3: um altar oferece +15% de dano por 25 de vida atual ou até 40 de
   cura por 40 óbolos. Escolhas sem recursos suficientes ficam bloqueadas.
-- Nível 4: há uma fenda discreta na lateral direita. Ela se revela quando
+- Nível 4: há uma fenda discreta em uma das laterais. Ela se revela quando
   você se aproxima e leva a uma câmara secreta com uma oferenda única:
   +12% de dano ou até 45 de cura. O portal ao sul retorna à mesma fase.
 Pressione E perto do personagem, altar ou fenda. Eventos podem ser ignorados.
@@ -73,6 +73,20 @@ Mede dano, acertos e DPS. Não dá XP, cinzas, itens, chefes ou níveis da campa
 Zerar a medição não apaga a missão. Voltar ou encerrar o treino retorna ao refúgio
 e conserva o checkpoint da campanha. Aparências e armas desbloqueadas permanecem
 após a morte e após recomeçar a campanha da classe.
+
+PASSO 7 — VARIAÇÕES DOS MAPAS
+Uma nova tentativa recebe uma semente aleatória. Cada fase usa essa semente
+para gerar uma variação própria: Pátio das ruínas, Galeria dividida, Alas do
+esquecimento ou Círculo ancestral. A identidade das onze temáticas é preservada.
+Mudam obstáculos, texturas e marcas do piso, quantidade e posição das ânforas,
+locais do Peregrino, altares e passagens secretas, além da ordem e das posições
+das criaturas das duas ondas. Os encontros continuam nos níveis 1, 3 e 4.
+Os caminhos até o portal, o baú e os pontos de exploração são verificados.
+Os inimigos surgem afastados do jogador, dos obstáculos e uns dos outros.
+Não há baús extras: o baú de escolha única continua sendo recompensa do chefe.
+O checkpoint registra a semente da tentativa individualmente por classe.
+Recarregar mantém a variação salva. Morrer ou recomeçar cria outra disposição,
+mantendo os níveis já confirmados por chefes. O treinamento usa obstáculos fixos.
 
 BAÚ E EQUIPAMENTOS
 Não há mochila, armazenamento ou acúmulo de equipamentos.
@@ -128,6 +142,7 @@ npx playwright install chromium antes dos testes.
 Inclui campanha completa, chefes, escolha única, trocas, descarte, combate e celular.
 Também verifica os pactos, custos dos altares, descoberta e retorno da câmara secreta.
 node cinzas/testes.cjs --refugio verifica apenas o refúgio, missões, forja e treino.
+node cinzas/testes.cjs --mapas verifica a geração, acessos e sementes dos mapas.
 
 SEQUÊNCIA DE MELHORIAS
 1. Arsenal por classe — implementado.
@@ -137,4 +152,4 @@ SEQUÊNCIA DE MELHORIAS
    escolhida pelo jogador: cinco níveis de duas ondas e depois um chefe por reino.
 5. Eventos e caminhos secretos — implementado.
 6. Refúgio entre tentativas, com treinamento, personagens e desbloqueios — implementado.
-7. Depois: variações aleatórias dos mapas mantendo a identidade de cada reino.
+7. Variações aleatórias dos mapas mantendo a identidade de cada reino — implementado.

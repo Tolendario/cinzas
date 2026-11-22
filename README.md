@@ -10,6 +10,7 @@ Baixe os arquivos do repositório e abra **index.html** em um navegador moderno.
 
 - Guerreiro, Arqueiro e Mago, com armas e especiais próprios.
 - 55 níveis de duas ondas, organizados em 11 temáticas, cada uma seguida de seu chefe.
+- Quatro disposições de arena, com obstáculos, ânforas, posições dos inimigos e pontos de encontro variáveis por tentativa e fase.
 - Baú após cada chefe: escolha um entre três itens. O baú desaparece após a escolha.
 - Somente três equipamentos em uso: armadura, anel e amuleto. Escolher um novo item equipa imediatamente e destrói o anterior do mesmo tipo. Não há mochila ou armazenamento.
 - Equipamentos permanecem entre fases e desaparecem ao morrer ou concluir a campanha. Itens no chão podem ser examinados com E antes de escolher ou dispensar.
@@ -21,6 +22,14 @@ Baixe os arquivos do repositório e abra **index.html** em um navegador moderno.
 - Controles por teclado e mouse ou tela de toque.
 
 O progresso fica salvo no navegador utilizado. Recarregar retoma o último chefe confirmado, incluindo os equipamentos escolhidos naquele ponto. Morrer mantém as temáticas liberadas, mas remove os equipamentos da tentativa.
+
+## Mapas variáveis
+
+Cada tentativa gera uma semente que determina a disposição de cada fase. As 11 temáticas mantêm suas cores, criaturas e perigos, enquanto mudam os obstáculos, a decoração do piso, as ânforas com recursos e os locais dos encontros opcionais.
+
+Os caminhos até o portal, o baú e os encontros são validados antes do combate. Os inimigos surgem afastados do jogador e dos obstáculos. O baú continua aparecendo somente depois de derrotar o chefe.
+
+O checkpoint guarda a semente separadamente para cada classe. Recarregar conserva o mapa daquela tentativa; morrer ou recomeçar gera outra variação. O pátio de treinamento mantém seus obstáculos e alvos fixos.
 
 ## Refúgio das Cinzas
 
@@ -81,6 +90,12 @@ Para verificar somente o refúgio, o treinamento e os desbloqueios:
 
 ```sh
 npm run test:refuge
+```
+
+Para verificar a geração dos mapas, seus caminhos e a retomada das sementes:
+
+```sh
+npm run test:maps
 ```
 
 A suíte verifica a campanha completa, chefes, baús, substituição direta dos equipamentos, checkpoints por classe, classes, armas, pactos, salas secretas e os fluxos do refúgio, incluindo treinamento e desbloqueios permanentes.

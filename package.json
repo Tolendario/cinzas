@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node testes.cjs",
     "test:mobile": "node testes.cjs --celular",
-    "test:refuge": "node testes.cjs --refugio"
+    "test:refuge": "node testes.cjs --refugio",
+    "test:maps": "node testes.cjs --mapas"
   },
   "engines": {
     "node": ">=20"
